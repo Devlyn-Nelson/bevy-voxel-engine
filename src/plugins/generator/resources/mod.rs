@@ -19,6 +19,12 @@ pub struct GeneratorRes {
 }
 
 impl GeneratorRes {
+    pub fn seed(&self) -> u32 {
+        self.noise.seed()
+    }
+    pub fn reroll_seed(&mut self) {
+        self.noise = rand::random::<u32>().into();
+    }
     pub fn generate_voxels(
         &self,
         offset: Vec3,
@@ -106,7 +112,7 @@ impl Default for GeneratorRes {
         Self {
             object_spawn_tries: 5,
             scale: 0.1,
-            noise: NoiseGenerator::new(),
+            noise: rand::random::<u32>().into(),
         }
     }
 }

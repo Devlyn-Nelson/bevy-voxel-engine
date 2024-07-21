@@ -2,7 +2,7 @@ use bevy::{
     math::{Vec2, Vec3},
     prelude::*,
 };
-use noise::NoiseFn;
+use noise::{NoiseFn, Seedable};
 
 #[derive(Clone)]
 pub struct NoiseGenerator {
@@ -14,6 +14,10 @@ impl NoiseGenerator {
         Self {
             simplex: noise::OpenSimplex::default(),
         }
+    }
+
+    pub fn seed(&self) -> u32 {
+        self.simplex.seed()
     }
 
     pub fn get_noise(&self, pos: f32) -> f32 {
@@ -56,5 +60,13 @@ impl NoiseGenerator {
                 .max(0.)
                 .min(1.),
         )
+    }
+}
+
+impl From<u32> for NoiseGenerator {
+    fn from(value: u32) -> Self {
+        Self {
+            simplex: noise::OpenSimplex::new(value),
+        }
     }
 }

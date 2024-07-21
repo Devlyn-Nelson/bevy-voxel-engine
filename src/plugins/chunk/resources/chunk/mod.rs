@@ -23,10 +23,11 @@ pub const CHUNK_VOXELS_VOLUME: usize = CHUNK_VOXELS_SIZE * CHUNK_VOXELS_SIZE * C
 pub struct Chunk {
     voxels: Box<[Voxel; CHUNK_VOXELS_VOLUME]>,
     pub objects: Box<Vec<Object>>,
+    seed: u32,
 }
 
 impl Chunk {
-    pub fn new(generator: &GeneratorRes, pos: PosComponent) -> Self {
+    pub fn new(generator: &GeneratorRes, pos: PosComponent, seed: u32) -> Self {
         let mut chunk = Self {
             objects: Box::new(vec![]),
             voxels: Box::new(
@@ -35,11 +36,16 @@ impl Chunk {
                     color: Color::srgb(0., 0., 0.),
                 }; CHUNK_VOXELS_VOLUME],
             ),
+            seed,
         };
 
         chunk.generate(pos, generator);
 
         chunk
+    }
+
+    pub fn seed(&self) -> u32 {
+        self.seed
     }
 
     pub fn clear(&mut self, commands: &mut Commands) {

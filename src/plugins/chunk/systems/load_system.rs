@@ -36,7 +36,18 @@ fn generate_chunk(
         while in_world_chunks.0.contains_key(&pos) {
             pos = chunk_load_iter.0.next()?
         }
-        in_world_chunks
+        spawn_gen_task(pos, commands, in_world_chunks, generator);
+    }
+    Some(())
+}
+
+pub fn spawn_gen_task(
+    pos: PosComponent,
+    commands: &mut Commands,
+    in_world_chunks: &mut InWorldChunks,
+    generator: &GeneratorRes,
+){
+    in_world_chunks
             .0
             .insert(pos, Box::new(InWorldChunk::Loading));
 
@@ -44,8 +55,9 @@ fn generate_chunk(
 
         let gen = generator.clone();
 
+        // TODO create more controlled spawn thread resource that manages threads more better.
         std::thread::spawn(move || {
-            let mut chunk = Chunk::new(&gen, pos);
+            let mut chunk = Chunk::new(&gen, pos, gen.seed());
             let vertices = chunk.generate_vertices(pos);
 
             if let Err(err) = tx.send((pos, Box::new(chunk), vertices)) {
@@ -54,8 +66,6 @@ fn generate_chunk(
         });
 
         commands.spawn(ComputeChunkGeneration(rx));
-    }
-    Some(())
 }
 
 pub fn chunk_load_system(

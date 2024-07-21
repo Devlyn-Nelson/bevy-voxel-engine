@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use systems::{chunk_generation_control, chunk_generation_control_start_up};
 
 use crate::common::components::pos::PosComponent;
 
@@ -14,6 +15,7 @@ use self::systems::unload_system::unload_chunk_system;
 pub mod components;
 pub mod resources;
 mod systems;
+pub use systems::GenerateChunkControlRefresh;
 pub struct ChunkPlugin;
 
 fn chunk_startup_system(
@@ -36,6 +38,26 @@ impl Plugin for ChunkPlugin {
             .add_systems(Update, chunk_load_system)
             .add_systems(Update, unload_chunk_system)
             .add_systems(Update, chunk_deform_system)
+            .add_systems(Update, spawn_chunk_system);
+    }
+}
+
+pub struct CustomChunkPlugin;
+
+fn custom_chunk_startup_system(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands.insert_resource(ObjectHandlers::new(&mut meshes, &mut materials));
+    
+}
+
+impl Plugin for CustomChunkPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(InWorldChunks::new())
+            .add_systems(Startup, (custom_chunk_startup_system, chunk_generation_control_start_up))
+            .add_systems(Update, chunk_generation_control)
             .add_systems(Update, spawn_chunk_system);
     }
 }
