@@ -23,25 +23,22 @@ impl BiomeGenerator for BumpsBiomeGenerator {
     }
 
     fn get_voxel_color(&self, generator: &NoiseGenerator, pos: Vec3, value: f32) -> Color {
-        let mut color = Color::srgb(generator.get_noise(pos.x), generator.get_noise(pos.y), generator.get_noise(pos.z));
-
-        if pos.y + 0.5 - self.layer2d.grass_value < 0. && value < 0.003 {
-            color = Color::srgb(generator.get_norm_noise(pos.y), generator.get_norm_noise(pos.z), generator.get_norm_noise(pos.x));
+        if self.layer2d.grass_value - (generator.get_noise(pos.y) * 0.75) < generator.get_noise(pos.y) || pos.y > 1.45 {
+            //GREEN
+            Color::srgb(generator.get_noise(pos.y).clamp(50., 150.), (230. * 0.6) + (generator.get_noise(pos.x).clamp(100., 240.)*0.2) + (generator.get_noise(pos.z).clamp(100., 240.)*0.2), 0.)
+        }else{
+            let g = (generator.get_noise(pos.y).clamp(100., 240.) * 0.25) + (generator.get_noise(pos.x).clamp(100., 240.)*0.25) + (generator.get_noise(pos.z).clamp(100., 240.)*0.25);
+            let r = g * 1.1;
+            let b = g * 0.9;
+            Color::srgb(r, g + 25., b)
         }
-
-        color
     }
 
     fn get_voxel_value(&self, generator: &NoiseGenerator, pos: Vec3) -> f32 {
-        let noise_v = if pos.y <= 2. {
+        let noise_v = if pos.y <= 1.5 {
             let t = generator.get_noise3(pos);
             if t < 0. {
-                let t = generator.get_noise3(Vec3 { x: pos.y, y: pos.z, z: pos.x });
-                if t < 0. {
-                    generator.get_noise3(Vec3 { x: pos.y, y: pos.z, z: pos.x })
-                }else{
-                    t
-                }
+                t + generator.get_noise3(Vec3 { x: pos.y, y: pos.z, z: pos.y }).abs()
             }else{
                 t
             }

@@ -2,6 +2,7 @@ use bevy::{
     math::{Vec2, Vec3},
     prelude::Resource,
 };
+use biomes::{bumps::BumpsBiomeGenerator, plain::PlainBiomeGenerator};
 use noise::NoiseFn;
 
 use crate::plugins::chunk::resources::chunk::{object::Object, voxel::Voxel};
@@ -33,8 +34,9 @@ impl GeneratorRes {
         size: usize,
     ) {
         for z in 0..size {
-            let mut biomes_handler =
-                BiomesHandler::new(&self.noise, (offset.z + z as f32) * self.scale, 0.5);
+            let mut biomes_handler = BiomesHandler::new_inner(0.5, Box::new(BumpsBiomeGenerator::new()), Box::new(PlainBiomeGenerator::new()));
+            // let mut biomes_handler =
+            //     BiomesHandler::new(&self.noise, (offset.z + z as f32) * self.scale, 0.5);
 
             for x in 0..size {
                 let pos2 = Vec2::new(offset.x + x as f32, offset.z + z as f32) * self.scale;

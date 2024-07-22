@@ -33,7 +33,7 @@ impl BiomeGenerator for PlainBiomeGenerator {
     }
 
     fn get_voxel_value(&self, generator: &NoiseGenerator, pos: Vec3) -> f32 {
-        let noise_v = if pos.y <= 1. {
+        let noise_v = if pos.y <= 1.5 {
             // println!("{pos}");
             f32::MAX
         }else{

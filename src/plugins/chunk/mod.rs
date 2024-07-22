@@ -57,7 +57,7 @@ impl Plugin for CustomChunkPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(InWorldChunks::new())
             .add_systems(Startup, (custom_chunk_startup_system, chunk_generation_control_start_up))
-            .add_systems(Update, chunk_generation_control)
+            // .add_systems(Update, chunk_generation_control)
             .add_systems(Update, spawn_chunk_system);
     }
 }
