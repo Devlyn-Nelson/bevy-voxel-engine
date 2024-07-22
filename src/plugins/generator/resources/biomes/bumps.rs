@@ -35,17 +35,18 @@ impl BiomeGenerator for BumpsBiomeGenerator {
     }
 
     fn get_voxel_value(&self, generator: &NoiseGenerator, pos: Vec3) -> f32 {
-        let noise_v = if pos.y <= 1.5 {
-            let t = generator.get_noise3(pos);
-            if t < 0. {
-                t + generator.get_noise3(Vec3 { x: pos.y, y: pos.z, z: pos.y }).abs()
-            }else{
-                t
+        match pos.y as i32 {
+            i32::MIN..=0 => f32::MAX,
+            1..2 => {
+                let t = generator.get_noise3(pos);
+                if t < 0. {
+                    t + generator.get_noise3(Vec3 { x: pos.y, y: pos.z, z: pos.y }).abs()
+                }else{
+                    t
+                }
             }
-        }else{
-            f32::MIN
-        };
-        noise_v
+            2..=i32::MAX => f32::MIN,
+        }
     }
 
     fn try_generate_object(&self, _pos: Vec3, _value: f32) -> Option<Object> {
