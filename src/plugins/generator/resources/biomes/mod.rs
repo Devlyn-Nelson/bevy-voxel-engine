@@ -2,6 +2,8 @@ use bevy::{
     math::{Vec2, Vec3},
     prelude::Color,
 };
+use bumps::BumpsBiomeGenerator;
+use plain::PlainBiomeGenerator;
 
 use crate::plugins::chunk::resources::chunk::{object::Object, voxel::Voxel};
 
@@ -11,6 +13,8 @@ use super::noise_generator::NoiseGenerator;
 
 pub mod cave;
 pub mod glade;
+pub mod plain;
+pub mod bumps;
 
 pub trait BiomeGenerator {
     fn update_2d_layer(&mut self, generator: &NoiseGenerator, pos: Vec2);
@@ -54,7 +58,24 @@ impl BiomesHandler {
 
         let transition = (pos - pos.floor()) - 0.5;
         let transition = transition / transition_gap + 0.5;
+        Self::new_inner(transition, get_biome_by_id(prev_id), get_biome_by_id(next_id))
+    }
 
+    pub fn new_other(generator: &NoiseGenerator, pos: f32, transition_gap: f32) -> Self {
+        let pos = pos / 10.;
+
+        let prev_id = generator.get_norm_noise(pos.floor());
+        let next_id = generator.get_norm_noise(pos.ceil());
+
+        let prev_id = (prev_id * 1000000.) as usize % BIOMES_COUNT;
+        let next_id = (next_id * 1000000.) as usize % BIOMES_COUNT;
+
+        let transition = (pos - pos.floor()) - 0.5;
+        let transition = transition / transition_gap + 0.5;
+        Self::new_inner(transition, Box::new(BumpsBiomeGenerator::new()), Box::new(BumpsBiomeGenerator::new()))
+    }
+
+    pub(crate) fn new_inner(transition: f32, prev_biome: Box<dyn BiomeGenerator>, next_biome: Box<dyn BiomeGenerator>) -> Self {
         Self {
             voxel: Voxel {
                 value: 0.,
@@ -63,8 +84,8 @@ impl BiomesHandler {
             prev_value: 0.,
             next_value: 0.,
             transition: transition.min(1.).max(0.),
-            prev_biome: get_biome_by_id(prev_id),
-            next_biome: get_biome_by_id(next_id),
+            prev_biome,
+            next_biome,
         }
     }
 
@@ -77,14 +98,10 @@ impl BiomesHandler {
         }
     }
 
-    pub fn update_3d(&mut self, generator: &NoiseGenerator, mut pos: Vec3) {
-        pos.y += pos.z / 2. + generator.get_noise(pos.z / 4.);
+    pub fn update_3d(&mut self, generator: &NoiseGenerator, pos: Vec3) {
+        // pos.y += pos.z / 2. + generator.get_noise(pos.z / 4.);
 
-        self.prev_value = if self.transition < 1. {
-            self.prev_biome.get_voxel_value(generator, pos)
-        } else {
-            0.
-        };
+        self.prev_value = self.prev_biome.get_voxel_value(generator, pos);
 
         self.next_value = if self.transition > 0. {
             self.next_biome.get_voxel_value(generator, pos)
@@ -106,7 +123,7 @@ impl BiomesHandler {
         };
 
         self.voxel = Voxel {
-            value: self.prev_value * (1. - self.transition) + self.next_value * self.transition,
+            value: self.prev_value,
             color: Color::srgba(
                 prev_color.to_srgba().red * (1.0 - self.transition)
                     + next_color.to_srgba().red * self.transition,
@@ -122,12 +139,10 @@ impl BiomesHandler {
 
     pub fn try_generate_object(
         &self,
-        generator: &NoiseGenerator,
-        mut pos: Vec3,
+        _generator: &NoiseGenerator,
+        pos: Vec3,
         value: f32,
     ) -> Option<Object> {
-        pos.y += pos.z / 2. + generator.get_noise(pos.z / 4.);
-
         if self.transition < 0.5 {
             self.prev_biome.try_generate_object(pos, value)
         } else {

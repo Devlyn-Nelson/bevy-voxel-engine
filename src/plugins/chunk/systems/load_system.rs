@@ -36,6 +36,7 @@ fn generate_chunk(
         while in_world_chunks.0.contains_key(&pos) {
             pos = chunk_load_iter.0.next()?
         }
+        // println!("{pos:?}");
         spawn_gen_task(pos, commands, in_world_chunks, generator);
     }
     Some(())

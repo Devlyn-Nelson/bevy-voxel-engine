@@ -43,9 +43,9 @@ pub fn chunk_generation_control_start_up(
     mut in_world_chunks: ResMut<InWorldChunks>,
     generator: Res<GeneratorRes>,
 ){
-    for x in 0..3 {
-        for y in 0..3 {
-            for z in 0..3 {
+    for x in -6..6 {
+        for y in -1..2 {
+            for z in -6..6 {
                 let pos = PosComponent::new(x, y, z);
                 spawn_gen_task(pos, &mut commands, in_world_chunks.as_mut(), generator.as_ref());
             }
